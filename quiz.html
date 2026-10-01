@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>35条・37条書面 暗記クイズ</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 650px;
+        }
+        .question-title {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            line-height: 1.5;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+            color: #34495e;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #cbd5e1;
+            background: #fff;
+            color: #475569;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-align: center;
+            min-width: 110px;
+        }
+        .btn:hover {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        .btn.active {
+            background: #0284c7 !important;
+            color: #fff !important;
+            border-color: #0369a1 !important;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
+        }
+        .action-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .action-btn {
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            text-align: center;
+            width: 100%;
+        }
+        .pass-btn { background: #64748b; flex: 1; width: auto; }
+        .pass-btn:hover { background: #475569; }
+        .submit-btn { background: #10b981; flex: 2; width: auto; }
+        .submit-btn:hover { background: #059669; }
+        .next-btn { background: #3b82f6; margin-top: 20px; display: none; }
+        .next-btn:hover { background: #2563eb; }
+
+        .feedback-box {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+        }
+        .correct { background: #d1fae5; color: #065f46; }
+        .incorrect { background: #fee2e2; color: #991b1b; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        th { background: #f1f5f9; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <!-- スタート画面（モード選択） -->
+    <div id="start-screen">
+        <div class="question-title">🏠 35条・37条書面 暗記クイズ</div>
+        <p style="margin-bottom: 20px; color: #475569; line-height: 1.6;">
+            35条書面と37条書面の総復習モードです。<br>
+            出題の順番を選んでスタートしてください！
+        </p>
+        <div style="display: flex; gap: 15px; flex-direction: column;">
+            <button class="action-btn submit-btn" onclick="startQuiz(false)">順番どおりに出題する</button>
+            <button class="action-btn" style="background: #0284c7;" onclick="startQuiz(true)">ランダムに出題する</button>
+        </div>
+    </div>
+
+    <!-- クイズ画面 -->
+    <div id="quiz-screen" style="display: none;">
+        <div id="progress" style="color: #64748b; font-size: 0.9rem; margin-bottom: 5px;"></div>
+        <div class="question-title" id="q-title">読み込み中...</div>
+
+        <!-- 1. 書面の種類（複数選択可） -->
+        <div class="section">
+            <span class="section-label">1. 書面の種類（複数選択可）</span>
+            <div class="btn-group">
+                <button class="btn doc-btn" id="doc-35" data-val="35" onclick="toggleDocType('35')">35条書面</button>
+                <button class="btn doc-btn" id="doc-37" data-val="37" onclick="toggleDocType('37')">37条書面</button>
+            </div>
+        </div>
+
+        <!-- 2. 対象の取引（複数選択可） -->
+        <div class="section">
+            <span class="section-label">2. 対象の取引（複数選択可）</span>
+            <div class="btn-group">
+                <button class="btn trade-btn" id="trade-takuchi-baibai" data-val="宅地売買" onclick="toggleTrade('宅地売買')">宅地売買</button>
+                <button class="btn trade-btn" id="trade-tatemono-baibai" data-val="建物売買" onclick="toggleTrade('建物売買')">建物売買</button>
+                <button class="btn trade-btn" id="trade-takuchi-taishaku" data-val="宅地貸借" onclick="toggleTrade('宅地貸借')">宅地貸借</button>
+                <button class="btn trade-btn" id="trade-tatemono-taishaku" data-val="建物貸借" onclick="toggleTrade('建物貸借')">建物貸借</button>
+            </div>
+        </div>
+
+        <!-- 3. 記載の性質（37条選択時のみ表示） -->
+        <div class="section" id="nature-section" style="display: none;">
+            <span class="section-label">3. 記載の性質</span>
+            <div class="btn-group">
+                <button class="btn nature-btn" data-val="絶対的記載事項" onclick="selectNature('絶対的記載事項')">絶対的記載事項</button>
+                <button class="btn nature-btn" data-val="任意的記載事項" onclick="selectNature('任意的記載事項')">任意的記載事項</button>
+            </div>
+        </div>
+
+        <div class="action-container" id="action-container">
+            <button id="pass-btn" class="action-btn pass-btn" onclick="passQuestion()">パスする</button>
+            <button id="submit-btn" class="action-btn submit-btn" onclick="submitAnswer()">回答を確定する</button>
+        </div>
+        <button id="next-btn" class="action-btn next-btn" onclick="nextQuestion()">次へ進む</button>
+        <div id="feedback" class="feedback-box"></div>
+    </div>
+
+    <!-- 結果一覧画面 -->
+    <div id="result-screen" style="display: none;">
+        <div class="question-title">🎉 一巡お疲れ様でした！</div>
+        <p id="score-summary" style="font-size: 1.1rem; font-weight: bold;"></p>
+        
+        <h3>詳細結果一覧</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40%">項目名</th>
+                    <th style="width: 10%">判定</th>
+                    <th style="width: 25%">あなたの回答</th>
+                    <th style="width: 25%">正解</th>
+                </tr>
+            </thead>
+            <tbody id="result-table-body">
+                <!-- 動的生成 -->
+            </tbody>
+        </table>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="action-btn pass-btn" onclick="goToStart()" style="flex: 1;">最初に戻る</button>
+            <button class="action-btn submit-btn" onclick="reviewIncorrect()" style="flex: 2;" id="review-btn">間違えた問題を復習する</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        // --- 35条単独の事項 ---
+        { id: 1, title: "①登記簿上の権利の種類・内容・名義人など（例：抵当権など）", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"] },
+        { id: 2, title: "②法令上の制限", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"] },
+        { id: 3, title: "③私道に関する負担", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借"] },
+        { id: 4, title: "④飲用水・電気・ガスなどの供給施設・排水施設の整備状況", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"] },
+        { id: 5, title: "⑤未完成物件における完成時の形状・構造", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"] },
+        { id: 6, title: "⑥建物の状況調査を実施しているかどうか、および実施している場合はその結果の概要（既存建物）", correctDoc: ["35"], correctTrades: ["建物売買", "建物貸借"] },
+        { id: 7, title: "⑦建物の建築・点検記録および維持保全の状況に関する一定の書類の保存の状況", correctDoc: ["35"], correctTrades: ["建物売買"] },
+        { id: 8, title: "⑧石綿（アスベスト）の使用有無", correctDoc: ["35"], correctTrades: ["建物売買", "建物貸借"] },
+        { id: 9, title: "⑨造成宅地防災区域にあるときはその旨", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"] },
+        { id: 10, title: "⑩土砂災害警戒区域にあるときはその旨", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"] },
+        { id: 11, title: "⑪津波災害警戒区域にあるときはその旨", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"] },
+        { id: 12, title: "⑫水害ハザードマップ", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"] },
+        { id: 13, title: "⑬耐震診断を受けているときはその内容", correctDoc: ["35"], correctTrades: ["建物売買", "建物貸借"] },
+        { id: 14, title: "⑭住宅性能評価", correctDoc: ["35"], correctTrades: ["建物売買"] },
+        { id: 15, title: "⑘手付金などの保全措置の概要", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買"] },
+        { id: 16, title: "⑲支払い金・預かり金を受領する場合の保全措置の概要", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"] },
+        { id: 17, title: "㉒割賦販売の場合、頭金及び割賦金の額・支払時期・方法", correctDoc: ["35"], correctTrades: ["宅地売買", "建物売買"] },
+
+        // 35条書面（賃借のみ）
+        { id: 31, title: "①台所・浴室・便所等の整備状況", correctDoc: ["35"], correctTrades: ["建物貸借"] },
+        { id: 32, title: "②契約期間・契約更新に関する事項", correctDoc: ["35"], correctTrades: ["宅地貸借", "建物貸借"] },
+        { id: 33, title: "③定期借地権に関する事項", correctDoc: ["35"], correctTrades: ["宅地貸借"] },
+        { id: 34, title: "④定期建物賃貸借である場合、その旨", correctDoc: ["35"], correctTrades: ["建物貸借"] },
+        { id: 35, title: "⑤終身建物賃貸借である場合、その旨", correctDoc: ["35"], correctTrades: ["建物貸借"] },
+        { id: 36, title: "⑥用途制限・利用制限", correctDoc: ["35"], correctTrades: ["宅地貸借", "建物貸借"] },
+        { id: 37, title: "⑦敷金など契約終了時における金銭の精算", correctDoc: ["35"], correctTrades: ["宅地貸借", "建物貸借"] },
+        { id: 38, title: "⑧管理の委託を受けた者の氏名・住所", correctDoc: ["35"], correctTrades: ["宅地貸借", "建物貸借"] },
+        { id: 39, title: "⑨契約終了時における宅地上の建物の取り壊し", correctDoc: ["35"], correctTrades: ["宅地貸借"] },
+
+        // 35条書面（区分所有）
+        { id: 51, title: "【区分所有】①敷地に関する権利の種類・内容", correctDoc: ["35"], correctTrades: ["建物売買"] },
+        { id: 52, title: "【区分所有】②共用部分に関する規約の定め", correctDoc: ["35"], correctTrades: ["建物売買"] },
+        { id: 53, title: "【区分所有】③専用部分の用途その他の利用制限に関する規約", correctDoc: ["35"], correctTrades: ["建物売買", "建物貸借"] },
+        { id: 54, title: "【区分所有】④専用使用権の規約", correctDoc: ["35"], correctTrades: ["建物売買"] },
+        { id: 55, title: "【区分所有】⑤建物の計画的な維持修繕費用などの減免に関する規約", correctDoc: ["35"], correctTrades: ["建物売買"] },
+        { id: 56, title: "【区分所有】⑥計画的な維持修繕費用の規約・既に積み立てられている額", correctDoc: ["35"], correctTrades: ["建物売買"] },
+        { id: 57, title: "【区分所有】⑦通常の管理費用", correctDoc: ["35"], correctTrades: ["建物売買"] },
+        { id: 58, title: "【区分所有】⑧管理委託を受けた者の氏名・住所", correctDoc: ["35"], correctTrades: ["建物売買", "建物貸借"] },
+        { id: 59, title: "【区分所有】⑨建物の維持修繕の実施状況", correctDoc: ["35"], correctTrades: ["建物売買"] },
+
+        // --- 35・37両方に記載がある事項（統合版） ---
+        { id: 101, title: "契約解除に関する事項", correctDoc: ["35", "37"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"], correctNature: "任意的記載事項" },
+        { id: 102, title: "代金・交換差金・借賃以外に授受される金銭の「額」「授受の目的」", correctDoc: ["35", "37"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"], correctNature: "任意的記載事項" },
+        { id: 103, title: "損害賠償額の予定・違約金に関する事項", correctDoc: ["35", "37"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"], correctNature: "任意的記載事項" },
+        { id: 104, title: "ローンの斡旋の内容およびローン不成立の場合の措置", correctDoc: ["35", "37"], correctTrades: ["宅地売買", "建物売買"], correctNature: "任意的記載事項" },
+        { id: 105, title: "担保責任（契約不適合責任）について", correctDoc: ["35", "37"], correctTrades: ["宅地売買", "建物売買"], correctNature: "任意的記載事項" },
+
+        // --- 37条単独（絶対的記載事項） ---
+        { id: 201, title: "当事者の氏名・住所", correctDoc: ["37"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"], correctNature: "絶対的記載事項" },
+        { id: 202, title: "物件を特定するために必要な表示", correctDoc: ["37"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"], correctNature: "絶対的記載事項" },
+        { id: 203, title: "既存建物の場合、建物の構造上主要な部分等の状況について双方が確認した事項", correctDoc: ["37"], correctTrades: ["建物売買"], correctNature: "絶対的記載事項" },
+        { id: 204, title: "代金（売買）・交換差金（交換）・借賃（貸借）、支払時期、支払方法", correctDoc: ["37"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"], correctNature: "絶対的記載事項" },
+        { id: 205, title: "物件の引渡し時期", correctDoc: ["37"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"], correctNature: "絶対的記載事項" },
+        { id: 206, title: "移転登記申請の時期", correctDoc: ["37"], correctTrades: ["宅地売買", "建物売買"], correctNature: "絶対的記載事項" },
+
+        // --- 37条単独（任意的記載事項） ---
+        { id: 207, title: "天災など不可抗力による損害負担", correctDoc: ["37"], correctTrades: ["宅地売買", "建物売買", "宅地貸借", "建物貸借"], correctNature: "任意的記載事項" },
+        { id: 208, title: "担保責任（契約不適合責任）の履行に関して講ずべき保証保険契約の締結等の措置", correctDoc: ["37"], correctTrades: ["宅地売買", "建物売買"], correctNature: "任意的記載事項" },
+        { id: 209, title: "宅地もしくは建物に関する租税、その他の公課の負担の内容", correctDoc: ["37"], correctTrades: ["宅地売買", "建物売買"], correctNature: "任意的記載事項" }
+    ];
+
+    let currentIndex = 0;
+    let userAnswers = [];
+    let incorrectQueue = [];
+    let isReviewMode = false;
+    let currentQuizList = [];
+
+    let selectedDoc = []; 
+    let selectedTrades = []; 
+    let selectedNature = ""; 
+    let isAnswered = false;
+
+    function shuffleArray(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function startQuiz(isRandom) {
+        isReviewMode = false;
+        userAnswers = [];
+        incorrectQueue = [];
+        currentIndex = 0;
+        
+        currentQuizList = isRandom ? shuffleArray(quizData) : [...quizData];
+
+        document.getElementById("start-screen").style.display = "none";
+        document.getElementById("quiz-screen").style.display = "block";
+        loadQuestion();
+    }
+
+    function goToStart() {
+        document.getElementById("result-screen").style.display = "none";
+        document.getElementById("start-screen").style.display = "block";
+    }
+
+    function loadQuestion() {
+        isAnswered = false;
+        const q = currentQuizList[currentIndex];
+        document.getElementById("progress").innerText = `項目 (${currentIndex + 1} / ${currentQuizList.length}) ${isReviewMode ? '※復習モード' : ''}`;
+        document.getElementById("q-title").innerText = q.title;
+
+        // 【区分所有】のときは「宅地売買」「宅地貸借」ボタンを非表示にする
+        const isKyubun = q.title.includes("【区分所有】");
+        document.getElementById("trade-takuchi-baibai").style.display = isKyubun ? "none" : "block";
+        document.getElementById("trade-tatemono-baibai").style.display = "block";
+        document.getElementById("trade-takuchi-taishaku").style.display = isKyubun ? "none" : "block";
+        document.getElementById("trade-tatemono-taishaku").style.display = "block";
+
+        selectedDoc = [];
+        selectedTrades = [];
+        selectedNature = "";
+        
+        const natureSection = document.getElementById("nature-section");
+        natureSection.style.display = "none";
+        
+        const feedback = document.getElementById("feedback");
+        feedback.style.display = "none";
+        feedback.innerHTML = "";
+
+        document.getElementById("action-container").style.display = "flex";
+        document.getElementById("next-btn").style.display = "none";
+
+        updateButtons();
+    }
+
+    function toggleDocType(type) {
+        if (isAnswered) return;
+        const idx = selectedDoc.indexOf(type);
+        if (idx > -1) {
+            selectedDoc.splice(idx, 1);
+        } else {
+            selectedDoc.push(type);
+        }
+
+        // 37が含まれている場合は性質選択セクションを表示
+        const natureSection = document.getElementById("nature-section");
+        if (selectedDoc.includes('37')) {
+            natureSection.style.display = "block";
+        } else {
+            natureSection.style.display = "none";
+            selectedNature = "";
+        }
+        updateButtons();
+    }
+
+    function toggleTrade(trade) {
+        if (isAnswered) return;
+        const idx = selectedTrades.indexOf(trade);
+        if (idx > -1) {
+            selectedTrades.splice(idx, 1);
+        } else {
+            selectedTrades.push(trade);
+        }
+        updateButtons();
+    }
+
+    function selectNature(nature) {
+        if (isAnswered) return;
+        selectedNature = nature;
+        updateButtons();
+    }
+
+    function updateButtons() {
+        const docBtns = document.querySelectorAll('.doc-btn');
+        docBtns.forEach(btn => {
+            if (selectedDoc.includes(btn.getAttribute('data-val'))) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const tradeBtns = document.querySelectorAll('.trade-btn');
+        tradeBtns.forEach(btn => {
+            if (selectedTrades.includes(btn.getAttribute('data-val'))) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const natureBtns = document.querySelectorAll('.nature-btn');
+        natureBtns.forEach(btn => {
+            if (selectedNature === btn.getAttribute('data-val')) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    function passQuestion() {
+        if (isAnswered) return;
+        isAnswered = true;
+        const q = currentQuizList[currentIndex];
+
+        if (!isReviewMode) {
+            userAnswers.push({
+                title: q.title,
+                isCorrect: false,
+                userAns: "パス",
+                correctAns: `書面:${q.correctDoc.join(', ')} / 取引:${q.correctTrades.length>0 ? q.correctTrades.join(', ') : 'なし'} ${q.correctNature ? '/ 性質:'+q.correctNature : ''}`
+            });
+            incorrectQueue.push(q);
+        }
+
+        const feedback = document.getElementById("feedback");
+        feedback.style.display = "block";
+        feedback.className = "feedback-box incorrect";
+        feedback.innerHTML = `パスしました。<br><span style="font-size:0.9em;font-weight:normal;">正解: 書面:${q.correctDoc.join(', ')} / 取引:${q.correctTrades.join(', ')} ${q.correctNature ? '/ 性質:'+q.correctNature : ''}</span>`;
+
+        document.getElementById("action-container").style.display = "none";
+        document.getElementById("next-btn").style.display = "block";
+    }
+
+    function submitAnswer() {
+        if (selectedDoc.length === 0) {
+            alert("書面の種類を選択してください。");
+            return;
+        }
+        if (selectedDoc.includes('37') && selectedNature === "") {
+            alert("記載の性質（絶対的/任意的）を選択してください。");
+            return;
+        }
+
+        isAnswered = true;
+        const q = currentQuizList[currentIndex];
+        
+        const isDocCorrect = selectedDoc.sort().toString() === q.correctDoc.sort().toString();
+        const isTradeCorrect = selectedTrades.sort().toString() === q.correctTrades.sort().toString();
+        let isNatureCorrect = true;
+        if (q.correctDoc.includes("37")) {
+            isNatureCorrect = (selectedNature === q.correctNature);
+        }
+
+        const isAllCorrect = isDocCorrect && isTradeCorrect && isNatureCorrect;
+
+        if (!isReviewMode) {
+            userAnswers.push({
+                title: q.title,
+                isCorrect: isAllCorrect,
+                userAns: `書面:${selectedDoc.join(', ')} / 取引:${selectedTrades.length>0 ? selectedTrades.join(', ') : 'なし'} ${selectedNature ? '/ 性質:'+selectedNature : ''}`,
+                correctAns: `書面:${q.correctDoc.join(', ')} / 取引:${q.correctTrades.length>0 ? q.correctTrades.join(', ') : 'なし'} ${q.correctNature ? '/ 性質:'+q.correctNature : ''}`
+            });
+            if (!isAllCorrect) {
+                incorrectQueue.push(q);
+            }
+        } else {
+            if (isAllCorrect) {
+                incorrectQueue = incorrectQueue.filter(item => item.id !== q.id);
+            }
+        }
+
+        const feedback = document.getElementById("feedback");
+        feedback.style.display = "block";
+        if (isAllCorrect) {
+            feedback.className = "feedback-box correct";
+            feedback.innerHTML = `正解！`;
+        } else {
+            feedback.className = "feedback-box incorrect";
+            feedback.innerHTML = `不正解...<br><span style="font-size:0.9em;font-weight:normal;">正解: 書面:${q.correctDoc.join(', ')} / 取引:${q.correctTrades.join(', ')} ${q.correctNature ? '/ 性質:'+q.correctNature : ''}</span>`;
+        }
+
+        document.getElementById("action-container").style.display = "none";
+        document.getElementById("next-btn").style.display = "block";
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex < currentQuizList.length) {
+            loadQuestion();
+        } else {
+            if (isReviewMode && incorrectQueue.length > 0) {
+                currentIndex = 0;
+                currentQuizList = [...incorrectQueue];
+                loadQuestion();
+            } else if (isReviewMode && incorrectQueue.length === 0) {
+                alert("間違えた問題の復習が完了しました！結果画面に戻ります。");
+                showResults();
+            } else {
+                showResults();
+            }
+        }
+    }
+
+    function showResults() {
+        document.getElementById("quiz-screen").style.display = "none";
+        document.getElementById("result-screen").style.display = "block";
+
+        const correctCount = userAnswers.filter(a => a.isCorrect).length;
+        const totalCount = userAnswers.length;
+        const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+
+        document.getElementById("score-summary").innerText = 
+            `初回正解数: ${correctCount} / ${totalCount} 問 （正答率: ${accuracy}%）`;
+
+        const reviewBtn = document.getElementById("review-btn");
+        if (incorrectQueue.length === 0) {
+            reviewBtn.innerText = "全問正解！最初に戻る";
+            reviewBtn.onclick = goToStart;
+        } else {
+            reviewBtn.innerText = `間違えた問題を復習する (${incorrectQueue.length}問)`;
+            reviewBtn.onclick = reviewIncorrect;
+        }
+
+        const tbody = document.getElementById("result-table-body");
+        tbody.innerHTML = "";
+
+        userAnswers.forEach(ans => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${ans.title}</td>
+                <td style="color: ${ans.isCorrect ? 'green' : 'red'}; font-weight: bold; text-align:center;">${ans.isCorrect ? '〇' : '×'}</td>
+                <td>${ans.userAns}</td>
+                <td>${ans.correctAns}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function reviewIncorrect() {
+        if (incorrectQueue.length === 0) {
+            goToStart();
+            return;
+        }
+        isReviewMode = true;
+        currentIndex = 0;
+        currentQuizList = [...incorrectQueue];
+        document.getElementById("result-screen").style.display = "none";
+        document.getElementById("quiz-screen").style.display = "block";
+        loadQuestion();
+    }
+</script>
+
+</body>
+</html>
